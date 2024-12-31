@@ -9,7 +9,8 @@ LOCATION_HOME = [
     xx.xxxxxx # Longitude (deg)
 ]
 TEMPERATURE_LOCATION = "xx.xxxxxx,xx.xxxxxx" #same as location home
-TOMORROW_API_KEY = "xxxxxxx" # Get an API key from https://tomorrow.io they only allows 25 pulls an hour, if you reach the limit you'll need to wait until the next hour 
+TOMORROW_API_KEY = "xxxxxxx" # Get an API key from https://tomorrow.io they only allows 25 pulls an hour, if you reach the limit you'll need to wait until the next hour
+TEMPEST_ACCESS_TOKEN = "xxxxxx" # Get access token from WeatherFlow Tempest API -- tempestxw.com > Settings > Data Authorizations > Create Token
 TEMPERATURE_UNITS = "imperial" #can use "metric" if you want, same for distance 
 DISTANCE_UNITS = "imperial"
 CLOCK_FORMAT = "12hr" #use 12hr or 24hr
