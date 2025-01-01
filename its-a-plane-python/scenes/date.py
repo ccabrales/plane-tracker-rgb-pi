@@ -36,7 +36,7 @@ class DateScene(object):
                     forecast_date = day['startTime'][:10]
                     if forecast_date == now.strftime('%Y-%m-%d'):
                        self.today_moonphase = 0
-                       if day["moonPhase"]:
+                       if "moonPhase" in day:
                            utc_moonphase = int(day["moonPhase"])
                            self.today_moonphase = utc_moonphase  # Update moon phase
                        self.last_fetched_moonphase = now.day  # Update the last fetch date
