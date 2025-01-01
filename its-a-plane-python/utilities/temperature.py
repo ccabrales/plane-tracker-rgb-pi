@@ -4,7 +4,6 @@ import pytz
 import time
 import json 
 import logging
-from times import convert_unix_timestamp
 
 # Attempt to load config data
 try:
@@ -173,6 +172,9 @@ def convert_forecast_icon(name):
             return 2100 # No matching icon...
         case _:
             return 1000
+
+def convert_unix_timestamp(timestamp):
+    return datetime.fromtimestamp(timestamp).isoformat() + "Z"
     
 # forecast_data = grab_forecast()
 # if forecast_data is not None:
