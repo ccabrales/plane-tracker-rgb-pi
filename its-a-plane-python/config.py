@@ -9,9 +9,11 @@ LOCATION_HOME = [
     xx.xxxxxx # Longitude (deg)
 ]
 TEMPERATURE_LOCATION = "xx.xxxxxx,xx.xxxxxx" #same as location home
-TOMORROW_API_KEY = "xxxxxxx" # Get an API key from https://tomorrow.io they only allows 25 pulls an hour, if you reach the limit you'll need to wait until the next hour
 TEMPEST_ACCESS_TOKEN = "xxxxxx" # Get access token from WeatherFlow Tempest API -- tempestxw.com > Settings > Data Authorizations > Create Token
-TEMPERATURE_UNITS = "imperial" #can use "metric" if you want, same for distance 
+TEMPEST_STATION_ID = "xxx" # Get station id from https://swd.weatherflow.com/swd/rest/stations stations.station_id
+TEMPERATURE_UNITS = "f" #can use "c" or "f" if you want
+PRECIP_UNITS = "in" # can use in, mm, cm
+FORECAST_DISTANCE_UNITS = "mi" # can use "mi" or "km"
 DISTANCE_UNITS = "imperial"
 CLOCK_FORMAT = "12hr" #use 12hr or 24hr
 MIN_ALTITUDE = 2600 #feet above sea level. If you live at 1000ft then you'd want to make yours ~3600 etc. I use 2600 to weed out some of the smaller general aviation traffic. 
