@@ -113,6 +113,12 @@ def grab_forecast(delay=2):
             if not daily:
                 raise KeyError("Daily forecasts not found in response.")
 
+            for day in daily:
+                day["startTime"] = convert_unix_timestamp(day["day_start_local"])
+                day["weatherCodeFullDay"] = convert_forecast_icon(day["icon"])
+                day["sunriseTime"] = convert_unix_timestamp(day["sunrise"])
+                day["sunsetTime"] = convert_unix_timestamp(day["sunset"])
+
             # Missing fields from Tomorrow:
             # - moonPhase
             return daily
