@@ -39,20 +39,22 @@ def grab_temperature_and_humidity(delay=2, max_retries=None):
     while True:
         try:
             request = r.get(
-                f"{TEMPEST_API_URL}/weather/realtime",
+                f"{TEMPEST_API_URL}/better_forecast",
                 params={
-                    "location": TEMPERATURE_LOCATION,
-                    "units": TEMPERATURE_UNITS,
-                    "token": TEMPEST_ACCESS_TOKEN
+                    "token": TEMPEST_ACCESS_TOKEN,
+                    "station_id": TEMPEST_STATION_ID,
+                    "units_temp":TEMPERATURE_UNITS,
+                    "units_precip": PRECIP_UNITS,
+                    "units_distance": FORECAST_DISTANCE_UNITS,
                 },
                 timeout=10  # Add timeout for the request
             )
             request.raise_for_status()  # Raise an exception for 4xx or 5xx status codes
             
             # Safely extract data
-            data = request.json().get("data", {}).get("values", {})
-            current_temp = data.get("temperature")
-            humidity = data.get("humidity")
+            data = request.json().get("current_conditions", {})
+            current_temp = data.get("air_temperature")
+            humidity = data.get("relative_humidity")
 
             # If temperature or humidity is missing, assign a default value of 0
             if current_temp is None:
