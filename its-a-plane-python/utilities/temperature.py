@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime
 import requests as r
 import pytz
 import time
@@ -112,13 +112,11 @@ def grab_forecast(delay=2):
             if not daily:
                 raise KeyError("Daily forecasts not found in response.")
 
-            timezone_offset_minutes = data["timezone_offset_minutes"]
-
             for day in daily:
-                day["startTime"] = convert_unix_timestamp(day["day_start_local"], timezone_offset_minutes)
+                day["startTime"] = convert_unix_timestamp(day["day_start_local"])
                 day["weatherCodeFullDay"] = convert_forecast_icon(day["icon"])
-                day["sunriseTime"] = convert_unix_timestamp(day["sunrise"], timezone_offset_minutes)
-                day["sunsetTime"] = convert_unix_timestamp(day["sunset"], timezone_offset_minutes)
+                day["sunriseTime"] = convert_unix_timestamp(day["sunrise"])
+                day["sunsetTime"] = convert_unix_timestamp(day["sunset"])
 
             # Missing fields from Tomorrow:
             # - moonPhase
@@ -175,9 +173,8 @@ def convert_forecast_icon(name):
         case _:
             return 1000
 
-def convert_unix_timestamp(timestamp, timezone_offset_minutes):
-    offset_seconds = timezone_offset_minutes * 60
-    return datetime.fromtimestamp(timestamp + offset_seconds, tz=timezone.utc).isoformat() + "Z"
+def convert_unix_timestamp(timestamp):
+    return datetime.fromtimestamp(timestamp).isoformat() + "Z"
     
 # forecast_data = grab_forecast()
 # if forecast_data is not None:
