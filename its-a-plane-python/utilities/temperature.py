@@ -115,7 +115,7 @@ def grab_forecast(delay=2):
             for day in daily:
                 timezone_offset_minutes = day["timezone_offset_minutes"]
                 day["startTime"] = convert_unix_timestamp(day["day_start_local"], timezone_offset_minutes)
-                day["weatherCodeFullDay"] = convert_forecast_icon(day["icon"])``
+                day["weatherCodeFullDay"] = convert_forecast_icon(day["icon"])
                 day["sunriseTime"] = convert_unix_timestamp(day["sunrise", timezone_offset_minutes])
                 day["sunsetTime"] = convert_unix_timestamp(day["sunset"], timezone_offset_minutes)
 
