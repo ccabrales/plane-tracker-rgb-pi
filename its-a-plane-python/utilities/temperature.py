@@ -31,103 +31,90 @@ from config import TEMPERATURE_LOCATION
 # Weather API
 TEMPEST_API_URL = "https://swd.weatherflow.com/swd/rest"
 
-def grab_temperature_and_humidity(delay=2, max_retries=None):
-    current_temp, humidity = None, None
-    retries = 0
+def grab_temperature_and_humidity():
+    try:
+        request = r.get(
+            f"{TEMPEST_API_URL}/better_forecast",
+            params={
+                "token": TEMPEST_ACCESS_TOKEN,
+                "station_id": TEMPEST_STATION_ID,
+                "units_temp":TEMPERATURE_UNITS,
+                "units_precip": PRECIP_UNITS,
+                "units_distance": FORECAST_DISTANCE_UNITS,
+            },
+            timeout=10  # Add timeout for the request
+        )
 
-    while True:
-        try:
-            request = r.get(
-                f"{TEMPEST_API_URL}/better_forecast",
-                params={
-                    "token": TEMPEST_ACCESS_TOKEN,
-                    "station_id": TEMPEST_STATION_ID,
-                    "units_temp":TEMPERATURE_UNITS,
-                    "units_precip": PRECIP_UNITS,
-                    "units_distance": FORECAST_DISTANCE_UNITS,
-                },
-                timeout=10  # Add timeout for the request
-            )
-            request.raise_for_status()  # Raise an exception for 4xx or 5xx status codes
-            
-            # Safely extract data
-            data = request.json().get("current_conditions", {})
-            current_temp = data.get("air_temperature")
-            humidity = data.get("relative_humidity")
+        if request.status_code == 429:
+            logging.error("Rate limit reached, returning error state")
+            return None, None
 
-            # If temperature or humidity is missing, assign a default value of 0
-            if current_temp is None:
-                logging.warning("Temperature data missing, defaulting to 0.")
-                current_temp = 0
+        request.raise_for_status()
 
-            if humidity is None:
-                logging.warning("Humidity data missing, defaulting to 0.")
-                humidity = 0
+        # Safely extract data
+        data = request.json().get("current_conditions", {})
+        temperature = data.get("air_temperature")
+        humidity = data.get("relative_humidity")
 
-            # If the data is valid (including defaults), exit the loop
-            break
+        if temperature is None or humidity is None:
+            logging.error("Incomplete data from API")
+            return None, None
 
-        except (r.exceptions.RequestException, ValueError) as e:
-            logging.error(f"Request failed. Error: {e}")
-            
-            retries += 1
-            if max_retries and retries >= max_retries:
-                logging.error("Max retries reached. Exiting.")
-                break
-            
-            logging.info(f"Retrying in {delay} seconds...")
-            time.sleep(delay)
+        #print(f"[Temp] {datetime.now()}: {temperature}{TEMPERATURE_UNITS}, {humidity}% RH")
+        return temperature, humidity
 
-    return current_temp, humidity
+    except (r.exceptions.RequestException, ValueError) as e:
+        logging.error(f"Temperature request failed: {e}")
+        return None, None
+        
+        
+def grab_forecast(tag="unknown"):
+    try:
+        resp = r.get(
+            f"{TEMPEST_API_URL}/better_forecast",
+            headers={
+                "Accept-Encoding": "gzip",
+                "accept": "application/json",
+                "content-type": "application/json"
+            },
+            params={
+                "token": TEMPEST_ACCESS_TOKEN,
+                "station_id": TEMPEST_STATION_ID,
+                "units_temp":TEMPERATURE_UNITS,
+                "units_precip": PRECIP_UNITS,
+                "units_distance": FORECAST_DISTANCE_UNITS,
+            },
+        )
+        resp.raise_for_status()  # Raise an exception for 4xx or 5xx status codes
 
-def grab_forecast(delay=2):
-    while True:
-        try:
-            resp = r.get(
-                f"{TEMPEST_API_URL}/better_forecast",
-                headers={
-                    "Accept-Encoding": "gzip",
-                    "accept": "application/json",
-                    "content-type": "application/json"
-                },
-                params={
-                    "token": TEMPEST_ACCESS_TOKEN,
-                    "station_id": TEMPEST_STATION_ID,
-                    "units_temp":TEMPERATURE_UNITS,
-                    "units_precip": PRECIP_UNITS,
-                    "units_distance": FORECAST_DISTANCE_UNITS,
-                },
-            )
-            resp.raise_for_status()  # Raise an exception for 4xx or 5xx status codes
+        # Safely access the JSON response to avoid KeyError
+        data = resp.json()
+        forecasts = data.get("forecast", {})
 
-            # Safely access the JSON response to avoid KeyError
-            data = resp.json()
-            forecasts = data.get("forecast", {})
+        if not forecasts:
+            raise KeyError("Forecasts not found in response.")
 
-            if not forecasts:
-                raise KeyError("Forecasts not found in response.")
+        daily = forecasts.get("daily", [])
 
-            daily = forecasts.get("daily", [])
+        if not daily:
+            raise KeyError("Daily forecasts not found in response.")
 
-            if not daily:
-                raise KeyError("Daily forecasts not found in response.")
+        for day in daily:
+            day["startTime"] = convert_unix_timestamp(day["day_start_local"])
+            day["weatherCodeFullDay"] = convert_forecast_icon(day["icon"])
+            day["sunriseTime"] = convert_unix_timestamp(day["sunrise"])
+            day["sunsetTime"] = convert_unix_timestamp(day["sunset"])
 
-            for day in daily:
-                day["startTime"] = convert_unix_timestamp(day["day_start_local"])
-                day["weatherCodeFullDay"] = convert_forecast_icon(day["icon"])
-                day["sunriseTime"] = convert_unix_timestamp(day["sunrise"])
-                day["sunsetTime"] = convert_unix_timestamp(day["sunset"])
+        # Missing fields from Tomorrow:
+        # - moonPhase
+        return daily
 
-            # Missing fields from Tomorrow:
-            # - moonPhase
-            return daily
-
-        except (r.exceptions.RequestException, KeyError) as e:
-            logging.error(f"Request failed. Error: {e}")
-            logging.info(f"Retrying in {delay} seconds...")
-            time.sleep(delay)
-    
-    return None
+    except r.exceptions.RequestException as e:
+        logging.error(f"[Forecast:{tag}] API request failed: {e}")
+        return []
+    except KeyError as e:
+        logging.error(f"[Forecast:{tag}] Unexpected data format: {e}")
+        return []
 
 # Convert Tempest forecast "icon" to Tomorrow API "weatherCodeFullDay"
 def convert_forecast_icon(name):

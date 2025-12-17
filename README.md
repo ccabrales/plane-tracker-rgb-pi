@@ -1,4 +1,64 @@
-I'm on Reddit under a new name [**Fit-Garbage-2259**](https://old.reddit.com/user/fit-garbage-2259)
+
+## Update
+
+I've updated all the weather scenes so if there is an error it'll just display ERR instead of freezing the clock. 
+
+Now logs the closest flights to your location and farthest destinations!
+
+1. **Top N closest flights** to your location (`MAX_CLOSEST`)  
+2. **Top N farthest flights** based on origin or destination (`MAX_FARTHEST`)  
+
+Each time a flight is detected:  
+
+- Calculates the **distance from home**  
+- Updates `close.txt` and `farthest.txt` if a **new closest flight** or a **new top-N farthest flight** is found  
+- Sends an **automatic email alert** when these changes occur with flight details and map 
+
+**Email notifications:**  
+
+- Sent from `flight.tracker.alerts2025@gmail.com`  
+- Includes a **link to an interactive map** showing flight positions (Link is good for 30 days. You can always view the maps on your local IP page)  
+
+**Key details:**  
+
+- Adjustable limits with `MAX_CLOSEST` and `MAX_FARTHEST`  
+- Closest flights to your house are always updated in `close.txt`  
+- Farthest destination/origin flights are maintained in `farthest.txt` independently  
+- Alerts taper off as flight positions stabilize  
+- Emails can be **turned off** while still keeping the log files and local wegpage. 
+
+**New features:**  
+
+- Generates **interactive maps** for showing closest and farthest flights with generated curved Earth paths; solid for flown, dashed for remaining.
+ 
+- Maps and log files can be viewed via your Pi’s local IP at `http://<Pi_IP>:8080` (The local IP address of your flight tracker ie 192.168.x.x:8080 etc) 
+
+This setup lets you stay updated without watching the clock, in addition to receiving email summaries with distance and map information.
+
+If you would like to manually view the log files they are located here
+
+```
+nano /home/path/its-a-plane-python/close.txt
+```
+```
+nano /home/path/its-a-plane-python/farthest.txt
+```
+
+**Please read if you already have a tracker setup** 
+
+It won't work if you are using "sudo" to run the code (if you set this up on Bullseye). You'll have to go into crontab and take "sudo" out if you are using it. 
+
+If you already have a tracker setup and want to do these additions you'll have to install these. 
+
+```
+pip install folium selenium pillow
+pip3 install --user flask
+```
+Make sure if you replace `its-a-plane.py` that you reown it
+
+```
+chmod +x /home/path/its-a-plane-python/its-a-plane.py
+```
 
 # Project Overview
 
@@ -31,6 +91,8 @@ This project is based on [Colin Waddell's work](https://github.com/ColinWaddell/
   - 1-4 hrs late: Red
   - 4-8 hrs late: Purple
   - 8+ hrs late: Blue
+ 
+  - If either the actual arrival time is None (not updated yet) or actual departure time is None (not updated yet) the airport code will be Grey. Happens if you live close to an airport 
 
 - An arrow between the airport codes acts as a progress bar for the flight, starting red (just left) and turning green (almost complete).
 - Below, the airline’s IATA name, flight number, abbreviated aircraft type, and the distance/direction to your location are displayed.
@@ -39,8 +101,8 @@ This project is based on [Colin Waddell's work](https://github.com/ColinWaddell/
 I've put a LOT of my time and effort into this project. If you'd like to show your appreciation (especially if I help you troubleshoot), consider getting me a coffee! I've shared this project in good faith—please don't take advantage of it.
 [paypal.me/c0wsaysmoo](https://paypal.me/c0wsaysmoo)
 
-Please please please reread the instructions carefully if you have any issues. Most issues are by not following them properly. If you absolutly can't figure it out shoot me a message.
-
+Please please please reread the instructions carefully if you have any issues. Most issues are by not following them properly. If you absolutly can't figure it out shoot me a message. I am also on reddit under [Mediocre-Opposite225](https://old.reddit.com/user/Mediocre-Opposite225/)
+ 
 ![tracker](https://github.com/user-attachments/assets/802a6c43-31d2-48dc-816b-4eb0ca0367e1)
 ![PXL_20241019_155956016](https://github.com/user-attachments/assets/91532d4f-3b6f-4a1b-9a26-43ffe5c6093d)
 ![PXL_20241019_165254031](https://github.com/user-attachments/assets/2e70bfcd-70ae-4acc-ba69-dde07c56a068)
@@ -51,17 +113,30 @@ Had to remount the Pi since the display ribbon bumped into the panel
 ![PXL_20241019_155605121](https://github.com/user-attachments/assets/4b71b758-00c9-4586-a5a0-ad251696eb17)
 ![PXL_20241019_155629794](https://github.com/user-attachments/assets/f82088b8-e959-44e3-82f3-7207779cc659)
 ![PXL_20241019_155732297](https://github.com/user-attachments/assets/77a329c7-d9c2-4a33-ab07-b6f6a2bf6ded)
+![signal-2025-12-01-080516_002](https://github.com/user-attachments/assets/887de831-c33f-4646-a97f-bf88dfb396d9)
 
+The difference in size between P4 and P2.5 panel. I use P4 for the living room and P2.5 for my desk.
 
+<img width="422" height="322" alt="distance" src="https://github.com/user-attachments/assets/354cda11-9f3d-4b04-ad8e-68ddfc3ec3e5" />
+
+The close.txt file. Farthest.txt looks the same.
+<img width="1752" height="810" alt="Screenshot 2025-12-01 154128" src="https://github.com/user-attachments/assets/587f8e87-a28e-4b46-97e4-3216cfb81702" />
+
+Map will show the top 3 farthest flights, and the closest ping'd flights to your location. Solid lines is the flown section and dashed is unflown. Uses estimated flight path based on curve of the Earth
+
+<img width="362" height="361" alt="Screenshot 2025-11-05 045843" src="https://github.com/user-attachments/assets/2309c292-02f2-4db3-8075-4cf1726c8039" />
+
+The email
 
 ---
 
 ## Hardware Overview:
 
-This is what I used to make mine. Other than the Pi and the Bonnet you can use whatever you want. 
-- Raspberry Pi 3A+ (Pi Zero had flickering, and Pi 5 isn’t compatible)
+This is what I used to make mine. Other than the Pi and the Bonnet you can use whatever you want. You will need a computer with a SD card reader to setup the Pi and to do the install. You won't need it after it is setup.
+- [Raspberry Pi 3A+](https://www.adafruit.com/product/4027) You can use the Pi 3B+/Pi 4 as well. (If you use a Pi 4 you'll need to adjust the "GPIO_SLOWDOWN" in the config file since it's more powerful than the Pi 3). It's just more expensive and you don't need the ethernet jack. You can also get them at [Microcenter](https://www.microcenter.com/product/514076/raspberry-pi-3-model-a-board). I tried with a Pi Zero, but couldn't get rid of the flicking completely even with soldering. I have not tried with a Pi 5, it requires different instructions with the Bonnet. If someone gets it running on the Pi 5 please let me know and I'll update the instructions. 
 - [Adafruit bonnet](https://www.adafruit.com/product/3211)
 - [64x32 RGB P4 panel](https://www.adafruit.com/product/2278) (I used a P4 panel measuring approximately 10 inches by 5 inches. If you prefer a smaller screen, you can opt for P3 or P2.5 panels etc, as long as they are 64x32 in size. These are available on Amazon and other websites. If the colors appear inverted, adjust the display file by changing 'RGB' to 'RBG.')
+- [Tinted acrylic](https://www.adafruit.com/product/4749) makes the screen so much easier to read and looks nicer 10/10 recommend. Keep in mind that the acrylic panel is slightly larger than the P4 screen when you make the case.
 - [double sided tape](https://www.amazon.com/EZlifego-Multipurpose-Removable-Transparent-Household/dp/B07VNSXY31) (I use it to attach the acrylic to the panel)
 - MicroSD card (any size)
 - [5V 4A power supply](https://www.amazon.com/Facmogu-Switching-Transformer-Compatible-5-5x2-1mm/dp/B087LY41PV) (powers both the Pi and the bonnet)
@@ -81,20 +156,31 @@ Once you get your Raspberry Pi up and running, you can follow [this guide](https
 
 
 ### 1. Install Raspberry Pi OS Lite
-Using the official Raspberry Pi Imager, go to `Other` and select **Raspberry Pi 64 OS Lite**. **Note** whether the version is **Bookworm** or **Bullseye** — this will matter later.
+Using the official Raspberry Pi Imager, go to `Other` and select **Raspberry Pi 64 OS Lite** (the Pi Zero only supports Raspberry Pi 32 OS lite). **Note** These instructions are for Bookworm
 When using the Imager make sure these settings are selected to enable SSH and make sure your WIFI information is typed in EXACTLY or else it won't connect when turned on.
 
 ![edit](https://github.com/user-attachments/assets/3141a507-6746-4741-84ba-2c5a6f319004)
 ![wifi](https://github.com/user-attachments/assets/0669de7a-cb9c-4c2a-9129-8b044c088f9f)
+
+Make sure you select the correct timezone since that is what is displayed on the clock. You can always change it later.
 ![ssh](https://github.com/user-attachments/assets/67d6fa8f-5ae3-4bf9-9f47-fbf78017ad78)
 
 ### 2. Connect via SSH
-I use **MobaXterm** on Windows to SSH into the Pi. After SSH-ing into the Pi, proceed with the following steps.
+I use **[MobaXterm](https://mobaxterm.mobatek.net/)** on Windows to SSH into the Pi since it allows you to see the folder structure. Can just open the files from there and edit them instead of through the cmd prompt. After [SSH-ing into the Pi](https://www.fromdev.com/2025/04/how-to-ssh-into-raspberry-pi-a-step-by-step-guide.html), proceed with the following steps.
 
 ### 3. Install the Adafruit Bonnet
-[Install the bonnet](https://learn.adafruit.com/adafruit-rgb-matrix-bonnet-for-raspberry-pi/driving-matrices) by following the instructions provided by Adafruit.
+[Install the bonnet](https://learn.adafruit.com/adafruit-rgb-matrix-bonnet-for-raspberry-pi/) by following the instructions provided by Adafruit.
+
+```
+curl https://raw.githubusercontent.com/adafruit/Raspberry-Pi-Installer-Scripts/main/rgb-matrix.sh >rgb-matrix.sh
+sudo bash rgb-matrix.sh
+```
 
 You can solder a bridge between the 4 and 18 to enable PWM for less screen flicker and smoother scrolling. It is optional as it will work without the bridge. More details in the link above.
+
+For the "interface board type" it's **"Bonnet"** Option 1
+
+For "Quality" or "Convenience" it's **"Quality"** IF you soldered the jumper. If not, it's **"Convenience"**.
 
 **Test to make sure the panel works before you do anything else.** You're looking for "HELLO WORLD" yellow happy face, with HELLO in green and WORLD in red. If it's only partially displaying or displaying parts in the wrong color than reattach the bonnet to the Pi. Do not continue unless it runs the test script perfectly.
 
@@ -102,8 +188,18 @@ You can solder a bridge between the 4 and 18 to enable PWM for less screen flick
 
 ```
 cd /home/path/rpi-rgb-led-matrix/examples-api-use/
+```
 
-sudo ./demo -D 1 runtext.ppm --led-rows=32 --led-cols=64 --led-limit-refresh=60 --led-slowdown-gpio=2 
+If you DIDN'T solder 
+
+```
+sudo ./demo -D 1 runtext.ppm --led-rows=32 --led-cols=64 --led-limit-refresh=60 --led-slowdown-gpio=2 --led-gpio-mapping=adafruit-hat
+```
+
+If you DID solder
+
+```
+sudo ./demo -D 1 runtext.ppm --led-rows=32 --led-cols=64 --led-limit-refresh=60 --led-slowdown-gpio=2 --led-gpio-mapping=adafruit-hat-pwm
 ```
 
 
@@ -112,7 +208,7 @@ You'll need Git for downloading the project files and other resources:
 
 ```bash
 sudo apt-get install git
-git config --global user.name "YOUR NAME"
+git config --global user.name "YOUR USER NAME"
 git config --global user.email "YOUR EMAIL"
 ```
 Clone the repository:
@@ -121,7 +217,7 @@ git clone https://github.com/c0wsaysmoo/plane-tracker-rgb-pi
 ```
 If the bridge on the bonnet is not soldered, you'll need to set HAT_PWM_ENABLED=False in the config file.
 
-After cloning the files, move everything to the main folder, as some files need to be in /home/path/ rather than /home/path/plane-tracker-rgb-pi/ 
+After cloning the files, move everything to the main folder, as some files need to be in /home/path/ rather than /home/path/plane-tracker-rgb-pi/ You'll need to combine the two logos folders since Github only allows 1,000 files per folder so I had to split them.
 ```
 mv /home/path/plane-tracker-rgb-pi/* /home/path/
 mkdir /home/path/logos
@@ -134,15 +230,16 @@ For Linux Bookworm:
 sudo apt install python3-pip
 sudo rm /usr/lib/python3.11/EXTERNALLY-MANAGED
 pip3 install pytz requests
+pip install beautifulsoup4
 pip3 install FlightRadarAPI
+pip install folium selenium pillow
+pip3 install --user flask
 sudo setcap 'cap_sys_nice=eip' /usr/bin/python3.11
 ```
 
-For Linux Bullseye:
+Move the RGB Module 
 ```
-sudo apt install python3-pip
-sudo pip3 install pytz requests
-sudo pip3 install FlightRadarAPI
+mv /home/path/rpi-rgb-led-matrix/bindings/python/rgbmatrix /home/path/its-a-plane-python/
 ```
 
 Make the Script Executable
@@ -158,28 +255,20 @@ nano /home/path/its-a-plane-python/config.py
 
 Run the Script
 
-For Bookworm
 ```
 /home/path/its-a-plane-python/its-a-plane.py
 ```
-
-For Bullseye
-```
-sudo /home/path/its-a-plane-python/its-a-plane.py
-```
-
 Set Up the Script to Run on Boot
 
 To ensure the script runs on boot, use crontab -e to edit the cron jobs and add the following line:
 
-For Bookworm
 ```
-@reboot sleep 60 && /home/flight/its-a-plane-python/its-a-plane.py
+@reboot sleep 60 && /home/path/its-a-plane-python/its-a-plane.py
 ```
 
-For Bullseye 
+You can also run it like so to create a log file in case there are issues. 
 ```
-@reboot sleep 60 && sudo /home/flight/its-a-plane-python/its-a-plane.py
+@reboot sleep 60 && /home/path/its-a-plane-python/its-a-plane.py >> /home/path/its-a-plane-python/workdammit.log 2>&1
 ```
 
 Optional: Add a Power Button
