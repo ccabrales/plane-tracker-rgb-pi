@@ -1,9 +1,11 @@
 from datetime import datetime
-from utilities.temperature import grab_forecast
+from utilities.temperature import grab_forecast, _load_file_cache, _save_file_cache
 from utilities.animator import Animator
 from setup import colours, fonts, frames
 from rgbmatrix import graphics
 import logging
+import time
+import os
 from config import NIGHT_START, NIGHT_END
 
 # Configure logging
@@ -13,17 +15,31 @@ from config import NIGHT_START, NIGHT_END
 DATE_FONT = fonts.extrasmall
 DATE_POSITION = (40, 11)
 
+_MOON_CACHE_FILE = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".cache", "moonphase.json"
+)
+_MOON_CACHE_TTL = 86400  # 24 hours
+
 # Convert NIGHT_START and NIGHT_END to datetime objects
 NIGHT_START_TIME = datetime.strptime(NIGHT_START, "%H:%M")
 NIGHT_END_TIME = datetime.strptime(NIGHT_END, "%H:%M")
+
 
 class DateScene(object):
     def __init__(self):
         super().__init__()
         self._last_date = None
-        self.today_moonphase = None
-        self.last_fetched_moonphase = None  # Store the date of the last forecast 
+        self.last_fetched_moonphase = None
 
+        # Pre-load from disk cache so moon phase shows immediately on reboot
+        cached, ts = _load_file_cache(_MOON_CACHE_FILE)
+        if cached is not None and (time.time() - ts) < _MOON_CACHE_TTL:
+            self.today_moonphase = cached
+            # Restore the day so we don't re-fetch until midnight
+            from datetime import datetime as _dt
+            self.last_fetched_moonphase = _dt.fromtimestamp(ts).day
+        else:
+            self.today_moonphase = None
 
     def moonphase(self):
         now = datetime.now()
@@ -40,14 +56,15 @@ class DateScene(object):
                 for day in forecast:
                     forecast_date = day['startTime'][:10]
                     if forecast_date == now.strftime('%Y-%m-%d'):
-                       self.today_moonphase = 0
-                       if "moonPhase" in day:
-                           utc_moonphase = int(day["moonPhase"])
-                           self.today_moonphase = utc_moonphase  # Update moon phase
-                       self.last_fetched_moonphase = now.day  # Update the last fetch date
-                       #logging.info(f"Fetched forecast data for {forecast_date}, moonphase: {utc_moonphase}")
-                       #print(f"Fetched forecast data for {forecast_date}, moonphase: {utc_moonphase}")
-                       break 
+                        self.today_moonphase = 0
+                        if "moonPhase" in day:
+                            utc_moonphase = int(day["moonPhase"])
+                            self.today_moonphase = utc_moonphase  # Update moon phase
+                        self.last_fetched_moonphase = now.day  # Update the last fetch date
+                        #logging.info(f"Fetched forecast data for {forecast_date}, moonphase: {utc_moonphase}")
+                        #print(f"Fetched forecast data for {forecast_date}, moonphase: {utc_moonphase}")
+                        _save_file_cache(_MOON_CACHE_FILE, self.today_moonphase)
+                        break
 
             except Exception as e:
                 logging.error(f"Error fetching forecast for moon phase: {e}")
@@ -105,9 +122,9 @@ class DateScene(object):
         # Flag for forced redraw if new data arrived
         if len(self._data):
             self._redraw_date = True
-            return 
+            return
 
-        # Get moon phase
+            # Get moon phase
         moon_phase_value = self.moonphase()
         if moon_phase_value is None:
             start_color = end_color = colours.RED

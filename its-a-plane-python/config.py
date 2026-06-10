@@ -1,32 +1,119 @@
-ZONE_HOME = {
-    "tl_y": xx.xxxxxx, # Top-Left Latitude (deg) https://www.latlong.net/ or google maps. The bigger the zone, the more planes you'll get. My zone is ~3.5 miles in each direction or 10mi corner to corner. 
-    "tl_x": xx.xxxxxx, # Top-Left Longitude (deg)
-    "br_y": xx.xxxxxx, # Bottom-Right Latitude (deg)
-    "br_x": xx.xxxxxx # Bottom-Right Longitude (deg)
-}
-LOCATION_HOME = [
-    xx.xxxxxx, # Latitude (deg)
-    xx.xxxxxx # Longitude (deg)
-]
-TEMPERATURE_LOCATION = "xx.xxxxxx,xx.xxxxxx" #same as location home
-TEMPEST_ACCESS_TOKEN = "xxxxxx" # Get access token from WeatherFlow Tempest API -- tempestxw.com > Settings > Data Authorizations > Create Token
-TEMPEST_STATION_ID = "xxx" # Get station id from https://swd.weatherflow.com/swd/rest/stations stations.station_id
-TEMPERATURE_UNITS = "f" #can use "c" or "f" if you want
-PRECIP_UNITS = "in" # can use in, mm, cm
-FORECAST_DISTANCE_UNITS = "mi" # can use "mi" or "km"
-DISTANCE_UNITS = "imperial"
-CLOCK_FORMAT = "12hr" #use 12hr or 24hr
-MIN_ALTITUDE = 2000 #feet above sea level. If you live at 1000ft then you'd want to make yours ~3000 etc. I use 2000 to weed out some of the smaller general aviation traffic. 
-BRIGHTNESS = 100
-BRIGHTNESS_NIGHT = 50
-NIGHT_BRIGHTNESS = False #True for on False for off
-NIGHT_START = "22:00" #dims screen between these hours
-NIGHT_END = "06:00"
-GPIO_SLOWDOWN = 2 #depends what Pi you have I use 2 for Pi 3 and 1 for Pi Zero
-JOURNEY_CODE_SELECTED = "xxx" #your home airport code
-JOURNEY_BLANK_FILLER = " ? " #what to display if theres no airport code
-HAT_PWM_ENABLED = False #only if you haven't soldered the PWM bridge use True if you did
-FORECAST_DAYS = 3 #today plus the next two days
-EMAIL = "" #insert your email address between the " ie "example@example.com" to receive emails when there is a new closest flight on the tracker. Leave "" to receive no emails. It will log/local webpage regardless
-MAX_FARTHEST = 3 #the amount of furthest flights you want in your log
-MAX_CLOSEST = 3 #the amount of closest flights to your house you want in your log
+"""
+config.py — Compatibility shim.
+Reads from config/config.json and config/secrets.json.
+All existing scenes and utilities import from this module unchanged.
+Call config.reload() after saving new values to pick them up at runtime.
+"""
+import json
+import os
+
+_BASE     = os.path.dirname(os.path.abspath(__file__))
+_CFG_PATH = os.path.join(_BASE, "config", "config.json")
+_SEC_PATH = os.path.join(_BASE, "config", "secrets.json")
+
+
+def _load(path):
+    try:
+        with open(path, encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+
+def reload():
+    """Reload config from disk — call after web UI saves changes."""
+    global _cfg, _sec
+    global ZONE_HOME, LOCATION_HOME, TEMPERATURE_LOCATION
+    global TEMPEST_ACCESS_TOKEN, TEMPEST_STATION_ID, PRECIP_UNITS, FORECAST_DISTANCE_UNITS
+    global TEMPERATURE_UNITS, DISTANCE_UNITS, SPEED_UNITS
+    global CLOCK_FORMAT, JOURNEY_CODE_SELECTED, JOURNEY_BLANK_FILLER
+    global BRIGHTNESS, BRIGHTNESS_NIGHT, NIGHT_BRIGHTNESS
+    global NIGHT_START, NIGHT_END, GPIO_SLOWDOWN, HAT_PWM_ENABLED
+    global LED_RGB_SEQUENCE, FORECAST_DAYS
+    global MIN_ALTITUDE, MAX_FARTHEST, MAX_CLOSEST, EMAIL, BLOCKED_CALLSIGNS
+    global MASTER_TRACKER, OTHER_TRACKER_HOSTNAMES
+    global API_SOURCE_ORDER, API_SOURCE_ENABLED
+    global AIRLABS_RESET_DAY, FLIGHTAWARE_RESET_DAY, FR24_RESET_DAY
+    global STATS_LOG_DAYS
+    global TOMORROW_API_KEY, OPENSKY_CLIENT_ID, OPENSKY_CLIENT_SECRET
+    global AIRLABS_API_KEYS, AIRLABS_API_KEY
+    global FLIGHTAWARE_API_KEYS, FLIGHTAWARE_API_KEY, FLIGHTAWARE_MONTHLY_LIMIT
+    global FLIGHTRADAR24_KEY
+
+    _cfg = _load(_CFG_PATH)
+    _sec = _load(_SEC_PATH)
+
+    _loc  = _cfg.get("location", {})
+    _disp = _cfg.get("display", {})
+    _flt  = _cfg.get("flights", {})
+    _ms   = _cfg.get("master_slave", {})
+
+    # Location / units
+    ZONE_HOME = _loc.get("zone_home", {
+        "tl_y": 0.0, "tl_x": 0.0,
+        "br_y": 0.0, "br_x": 0.0,
+    })
+    LOCATION_HOME           = _loc.get("location_home", [0.0, 0.0])
+    TEMPERATURE_LOCATION    = _loc.get("temperature_location", "")
+    TEMPEST_ACCESS_TOKEN    = _loc.get("tempest_access_token", "") # Get access token from WeatherFlow Tempest API -- tempestxw.com > Settings > Data Authorizations > Create Token
+    TEMPEST_STATION_ID      = _loc.get("tempest_station_id", "") # Get station id from https://swd.weatherflow.com/swd/rest/stations stations.station_id
+    TEMPERATURE_UNITS       = _loc.get("temperature_units", "imperial")
+    PRECIP_UNITS            = _loc.get("precip_units", "in") # can use in, mm, cm
+    FORECAST_DISTANCE_UNITS = _loc.get("forecast_distance_units", "mi") # can use "mi" or "km"
+    DISTANCE_UNITS          = _loc.get("distance_units", "imperial")
+    SPEED_UNITS             = _loc.get("speed_units", "imperial")
+    CLOCK_FORMAT            = _loc.get("clock_format", "12hr")
+    JOURNEY_CODE_SELECTED   = _loc.get("journey_code", "ORD")
+    JOURNEY_BLANK_FILLER    = _loc.get("journey_blank_filler", " ? ")
+
+    # Display
+    BRIGHTNESS        = _disp.get("brightness", 100)
+    BRIGHTNESS_NIGHT  = _disp.get("brightness_night", 50)
+    NIGHT_BRIGHTNESS  = _disp.get("night_brightness", False)
+    NIGHT_START       = _disp.get("night_start", "22:00")
+    NIGHT_END         = _disp.get("night_end", "06:00")
+    GPIO_SLOWDOWN     = _disp.get("gpio_slowdown", 2)
+    HAT_PWM_ENABLED   = _disp.get("hat_pwm_enabled", False)
+    LED_RGB_SEQUENCE  = _disp.get("led_rgb_sequence", "RGB")
+    FORECAST_DAYS     = _disp.get("forecast_days", 3)
+
+    # Flights
+    MIN_ALTITUDE      = _flt.get("min_altitude", 2000)
+    MAX_FARTHEST      = _flt.get("max_farthest", 3)
+    MAX_CLOSEST       = _flt.get("max_closest", 3)
+    EMAIL             = _flt.get("email", "")
+    BLOCKED_CALLSIGNS = {c.strip().upper() for c in _flt.get("blocked_callsigns", []) if c.strip()}
+
+    # Master / slave
+    MASTER_TRACKER          = _ms.get("master_tracker", "")
+    OTHER_TRACKER_HOSTNAMES = _ms.get("other_tracker_hostnames", [])
+    
+    # Stats
+    _stats = _cfg.get("stats", {})
+    STATS_LOG_DAYS = _stats.get("stats_log_days") or 0
+
+    # API Sources
+    _apis = _cfg.get("api_sources", {})
+    API_SOURCE_ORDER   = _apis.get("order",   ["AirLabs", "FlightAware", "FR24"])
+    API_SOURCE_ENABLED = _apis.get("enabled", {})
+    _legacy = max(1, min(31, int(_apis.get("reset_day", 1))))
+    AIRLABS_RESET_DAY     = max(1, min(31, int(_apis.get("airlabs_reset_day",     _legacy))))
+    FLIGHTAWARE_RESET_DAY = max(1, min(31, int(_apis.get("flightaware_reset_day", _legacy))))
+    FR24_RESET_DAY        = max(1, min(31, int(_apis.get("fr24_reset_day",        _legacy))))
+
+    # Secrets
+    TOMORROW_API_KEY          = _sec.get("tomorrow_api_key", "")
+    OPENSKY_CLIENT_ID         = _sec.get("opensky_client_id", "")
+    OPENSKY_CLIENT_SECRET     = _sec.get("opensky_client_secret", "")
+    AIRLABS_API_KEYS          = _sec.get("airlabs_api_keys", [])
+    AIRLABS_API_KEY           = AIRLABS_API_KEYS[0] if AIRLABS_API_KEYS else _sec.get("airlabs_api_key", "")
+    FLIGHTAWARE_API_KEYS      = _sec.get("flightaware_api_keys", [])
+    FLIGHTAWARE_API_KEY       = FLIGHTAWARE_API_KEYS[0] if FLIGHTAWARE_API_KEYS else _sec.get("flightaware_api_key", "")
+    FLIGHTAWARE_MONTHLY_LIMIT = _sec.get("flightaware_monthly_limit", 4.50)
+    FLIGHTRADAR24_KEY         = _sec.get("flightradar24_key", "")
+
+
+# Initial load on import
+_cfg = {}
+_sec = {}
+reload()
