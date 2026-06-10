@@ -4,7 +4,7 @@ If MASTER_TRACKER = "" this Pi calls Tomorrow.io directly.
 If MASTER_TRACKER = "hostname" this Pi polls the master's /weather/json endpoint.
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime
 import time
 import logging
 import os
