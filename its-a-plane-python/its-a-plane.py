@@ -67,6 +67,7 @@ def _ensure_config():
     }
 
     default_sec = {
+        "tempest_access_token": "",
         "tomorrow_api_key": "",
         "opensky_client_id": "",
         "opensky_client_secret": "",

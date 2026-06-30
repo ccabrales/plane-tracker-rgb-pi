@@ -102,6 +102,7 @@ def reload():
     FR24_RESET_DAY        = max(1, min(31, int(_apis.get("fr24_reset_day",        _legacy))))
 
     # Secrets
+    TEMPEST_ACCESS_TOKEN      = _sec.get("tempest_access_token", "")
     TOMORROW_API_KEY          = _sec.get("tomorrow_api_key", "")
     OPENSKY_CLIENT_ID         = _sec.get("opensky_client_id", "")
     OPENSKY_CLIENT_SECRET     = _sec.get("opensky_client_secret", "")
